@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Netflix Comments dev server</title>
+<style>
+  body { font: 15px/1.5 -apple-system, system-ui, sans-serif; background: #141414; color: #eee; max-width: 720px; margin: 48px auto; padding: 0 16px; }
+  a { color: #e50914; }
+  code { background: #222; padding: 2px 6px; border-radius: 4px; }
+</style>
+</head>
+<body>
+  <h1>Netflix Comments — dev server</h1>
+  <p>The API is live. Health: <a href="/api/health">/api/health</a></p>
+  <h2>Mock player</h2>
+  <p>Pages under <code>/watch/&lt;id&gt;</code> mimic Netflix's player URL shape so the extension's content script attaches to them (the manifest also matches <code>localhost</code>).</p>
+  <ul>
+    <li><a href="/watch/demo">/watch/demo</a> — silent 10-minute clip (add <code>?src=bbb</code> for Big Buck Bunny)</li>
+    <li><a href="/watch/demo2">/watch/demo2</a> — a second "title", separate comment thread</li>
+  </ul>
+</body>
+</html>

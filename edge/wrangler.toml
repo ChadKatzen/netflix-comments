@@ -1,0 +1,17 @@
+# Cloudflare Worker config for the Netflix Comments write API + snapshot cron.
+# UNVERIFIED: not yet deployed. Fill in the ids after `wrangler d1 create` / `wrangler r2 bucket create`.
+name = "netflix-comments-api"
+main = "worker.js"
+compatibility_date = "2025-06-01"
+
+[triggers]
+crons = ["* * * * *"]   # re-render dirty titles every minute
+
+[[d1_databases]]
+binding = "DB"
+database_name = "netflix-comments"
+database_id = "REPLACE_WITH_D1_ID"
+
+[[r2_buckets]]
+binding = "SNAPSHOTS"
+bucket_name = "netflix-comments-snapshots"
