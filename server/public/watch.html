@@ -7,7 +7,8 @@
 <style>
   html, body { margin: 0; height: 100%; background: #000; color: #fff; font: 14px -apple-system, system-ui, sans-serif; overflow: hidden; }
   .watch-video { position: fixed; inset: 0; }
-  video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+  video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: transparent; }
+  canvas.scene { position: absolute; inset: 0; width: 100%; height: 100%; }
   .watch-video--title, [data-uia="video-title"] { position: absolute; top: 20px; left: 24px; font-size: 20px; font-weight: 600; text-shadow: 0 1px 4px #000; }
   [data-uia="video-title"] h4 { display: inline; margin: 0 8px 0 0; font-size: 20px; }
   [data-uia="video-title"] span { font-weight: 400; font-size: 16px; opacity: .85; margin-right: 8px; }
@@ -16,6 +17,7 @@
 </head>
 <body>
   <div class="watch-video">
+    <canvas class="scene" id="scene"></canvas>
     <video id="v" controls playsinline></video>
     <div data-uia="video-title"><h4>Big Buck Bunny</h4><span>E1</span><span>The Mock Episode</span></div>
     <div class="hint">Mock Netflix player (silent 10-min clip; add <code>?src=bbb</code> for real video). Space = play/pause, F = fullscreen (same keys Netflix uses). The extension's drawer should appear on the right.</div>
@@ -34,6 +36,24 @@
       if (e.key === 'ArrowLeft') v.currentTime -= 10;
       if (e.key === 'ArrowRight') v.currentTime += 10;
     });
+    // Synthetic "picture" for the silent track: drifting colour fields + a big timecode, so the overlay can be
+    // judged against bright and dark content. Chrome for Testing ships no H.264, so this is what tests see.
+    const scene = document.getElementById('scene'), ctx = scene.getContext('2d');
+    function draw() {
+      const w = scene.width = scene.clientWidth, h = scene.height = scene.clientHeight, t = v.currentTime || 0;
+      const g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, `hsl(${(t * 6) % 360} 60% 22%)`); g.addColorStop(1, `hsl(${(t * 6 + 120) % 360} 70% 48%)`);
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 5; i++) {
+        ctx.fillStyle = `hsla(${(t * 10 + i * 50) % 360} 90% 70% / .35)`;
+        ctx.beginPath(); ctx.arc(w * (0.2 + 0.15 * i) + Math.sin(t / 3 + i) * 80, h * 0.5 + Math.cos(t / 4 + i) * 120, 90 + i * 20, 0, 7); ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.font = `700 ${Math.round(h / 6)}px -apple-system, system-ui, sans-serif`; ctx.textAlign = 'center';
+      const mm = Math.floor(t / 60), ss = String(Math.floor(t % 60)).padStart(2, '0');
+      ctx.fillText(`${mm}:${ss}`, w / 2, h / 2 + h / 18);
+      requestAnimationFrame(draw);
+    }
+    if (!v.src.includes('BigBuckBunny')) draw(); else scene.remove();
     const id = location.pathname.split('/')[2];
     if (id === 'demo2') document.querySelector('[data-uia="video-title"] h4').textContent = 'Second Mock Title';
   </script>

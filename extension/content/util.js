@@ -23,11 +23,11 @@ window.NFC = window.NFC || {};
 
   NFC.timeAgo = (ts) => {
     const d = Math.max(0, Date.now() - ts) / 1000;
-    if (d < 60) return 'now';
-    if (d < 3600) return Math.floor(d / 60) + 'm';
-    if (d < 86400) return Math.floor(d / 3600) + 'h';
-    if (d < 86400 * 30) return Math.floor(d / 86400) + 'd';
-    return Math.floor(d / (86400 * 30)) + 'mo';
+    if (d < 60) return 'just now';
+    if (d < 3600) return Math.floor(d / 60) + 'm ago';
+    if (d < 86400) return Math.floor(d / 3600) + 'h ago';
+    if (d < 86400 * 30) return Math.floor(d / 86400) + 'd ago';
+    return Math.floor(d / (86400 * 30)) + 'mo ago';
   };
 
   NFC.compact = (n) => (n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(n >= 1e4 ? 0 : 1) + 'K' : String(n));

@@ -63,6 +63,7 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--red); ou
 .bd { flex: 1; min-width: 0; }
 .meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
 .meta .who { color: #fff; font-weight: 600; }
+.meta .age { color: #777; }
 .meta .you { background: var(--bg3); color: #fff; font-size: 10px; padding: 0 5px; border-radius: 4px; font-weight: 600; }
 .tpill { background: var(--bg3); color: #fff; font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; }
 .tpill:hover { background: var(--red); }
@@ -92,7 +93,7 @@ textarea:focus { border-color: rgba(255,255,255,.3); }
 kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-monospace, Menlo, monospace; }
 
 /* toasts (SoundCloud-style passing comments) */
-.toasts { position: absolute; left: 24px; bottom: 130px; display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
+.toasts { position: absolute; left: 24px; bottom: 130px; display: flex; flex-direction: column; gap: 8px; max-width: min(360px, 36vw); }
 .toast { pointer-events: auto; display: flex; gap: 10px; align-items: flex-start; background: var(--bg); backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; box-shadow: 0 8px 28px rgba(0,0,0,.45); animation: pop .25s ease-out; cursor: pointer; }
 .toast.out { animation: fade .4s ease-in forwards; }
 .toast .av { width: 28px; height: 28px; font-size: 12px; }

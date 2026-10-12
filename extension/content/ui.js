@@ -12,7 +12,7 @@
     eyeOff: '<svg viewBox="0 0 24 24"><path d="M2.3 3.7 3.7 2.3l18 18-1.4 1.4-3.3-3.3C15.5 19.3 13.8 19.7 12 19.7 7 19.7 3 15.7 1.5 12.7c.8-1.6 2.2-3.4 4-4.9zM12 5.3c5 0 9 4 10.5 7.4-.6 1.2-1.5 2.5-2.7 3.7l-2.6-2.6a3.8 3.8 0 0 0-4.5-4.5L9.9 6.5c.7-.8 1.4-1.2 2.1-1.2z"/></svg>',
     heart: '<svg viewBox="0 0 24 24"><path d="M12 20.3 4.3 12.6a4.6 4.6 0 0 1 6.5-6.5L12 7.3l1.2-1.2a4.6 4.6 0 0 1 6.5 6.5z"/></svg>',
   };
-  const NOW_WINDOW = 25;     // seconds after a comment's t that it counts as "happening now"
+  const NOW_WINDOW = 12;     // seconds after a comment's t that it counts as "happening now"
   const SPOILER_GRACE = 3;   // seconds ahead of the playhead still shown
   const TOAST_MS = 6000, MAX_TOASTS = 3;
 
@@ -93,6 +93,7 @@
         this.tab = b.dataset.tab;
         for (const t of this.el.tabs.querySelectorAll('.tab')) t.classList.toggle('on', t === b);
         this.renderList(true);
+        this.el.list.scrollTop = 0;
       });
       this.el.strip.addEventListener('mousemove', (e) => {
         const r = this.el.strip.getBoundingClientRect();
@@ -103,7 +104,7 @@
         const r = this.el.strip.getBoundingClientRect();
         this.seek(((e.clientX - r.left) / r.width) * this.duration);
       });
-      this.el.list.addEventListener('scroll', () => { this.userScrolledAt = Date.now(); });
+      for (const t of ['wheel', 'touchmove', 'mousedown']) this.el.list.addEventListener(t, () => { this.userScrolledAt = Date.now(); }, { passive: true });
       this.el.list.addEventListener('click', (e) => this.onListClick(e));
       this.el.toasts.addEventListener('click', (e) => {
         const t = e.target.closest('.toast'); if (!t) return;
@@ -112,8 +113,11 @@
       });
 
       const ta = this.el.ta;
+      // Start composing on focus, first keystroke or click: whichever comes first freezes the timestamp.
       ta.addEventListener('focus', () => this.beginCompose());
+      ta.addEventListener('mousedown', () => this.beginCompose());
       ta.addEventListener('input', () => {
+        if (this.composeT == null) this.beginCompose();
         this.el.send.disabled = !ta.value.trim();
         ta.style.height = 'auto'; ta.style.height = Math.min(120, ta.scrollHeight) + 'px';
       });
@@ -213,7 +217,7 @@
       const parts = [];
       parts.push(`${compact(m?.count ?? 0)} comment${(m?.count ?? 0) === 1 ? '' : 's'}`);
       if (t.offline) parts.push('<span class="warn">offline · showing cached</span>');
-      else if (m?.generatedAt) parts.push(`updated ${timeAgo(m.generatedAt)} ago`.replace('now ago', 'just now'));
+      else if (m?.generatedAt) parts.push(`synced ${timeAgo(m.generatedAt)}`);
       this.el.sub.innerHTML = parts.join(' · ');
       this.el.pillN.textContent = compact(m?.count ?? 0);
     }
@@ -252,7 +256,7 @@
       else if (this.tab === 'new') items = top.sort((a, b) => b.createdAt - a.createdAt);
       else items = top.sort((a, b) => a.t - b.t || a.createdAt - b.createdAt);
 
-      const nowIds = new Set(items.filter((c) => now - c.t >= 0 && now - c.t < NOW_WINDOW).map((c) => c.id));
+      const nowIds = new Set(this.tab === 'live' ? items.filter((c) => now - c.t >= 0 && now - c.t < NOW_WINDOW).map((c) => c.id) : []);
       const hidden = this.hiddenCount();
       const sig = this.tab + '|' + items.map((c) => `${c.id}:${c.likeCount}:${c.liked ? 1 : 0}:${c.replyCount}:${c.pending ? 1 : 0}:${c.failed ? 1 : 0}:${this.expanded.has(c.id) ? 1 : 0}`).join(',') + '|' + [...nowIds].join(',') + '|' + hidden + '|' + [...replies.values()].flat().map((r) => r.id + ':' + r.likeCount).join(',');
       if (!force && sig === this.lastSig) return;
@@ -279,7 +283,8 @@
       this.el.list.innerHTML = html;
       if (this.tab === 'live' && Date.now() - this.userScrolledAt > 6000 && nowIds.size) {
         const last = [...nowIds].pop();
-        this.el.list.querySelector(`.cm[data-id="${last}"]`)?.scrollIntoView({ block: 'center' });
+        const el = this.el.list.querySelector(`.cm[data-id="${last}"]`);
+        if (el) this.el.list.scrollTop = Math.max(0, el.offsetTop + el.offsetHeight - this.el.list.clientHeight * 0.66);
       }
     }
 
@@ -291,7 +296,7 @@
 <div class="${cls}" data-id="${esc(c.id)}">
   <div class="av" style="background:${avatarColor(c.authorId)}">${esc(initial(c.authorName))}</div>
   <div class="bd">
-    <div class="meta"><span class="who">${esc(c.authorName)}</span>${c.mine ? '<span class="you">you</span>' : ''}${isReply ? '' : `<button class="tpill" data-act="seek" data-t="${c.t}" title="Jump to ${fmtTime(c.t)}">${fmtTime(c.t)}</button>`}<span>${timeAgo(c.createdAt)}${status}</span></div>
+    <div class="meta"><span class="who">${esc(c.authorName)}</span>${c.mine ? '<span class="you">you</span>' : ''}${isReply ? '' : `<button class="tpill" data-act="seek" data-t="${c.t}" title="Jump to ${fmtTime(c.t)}">${fmtTime(c.t)}</button>`}<span class="age">· ${timeAgo(c.createdAt)}${status}</span></div>
     <div class="txt">${esc(c.body)}</div>
     <div class="acts">
       <button class="like ${c.liked ? 'on' : ''}" data-act="like" ${canAct ? '' : 'disabled'}>${ICON.heart}<span>${compact(c.likeCount ?? 0)}</span></button>

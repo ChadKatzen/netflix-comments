@@ -18,7 +18,7 @@ const PORT = Number(process.env.PORT || 3131);
 const DB_PATH = process.env.DB_PATH || join(__dirname, 'data', 'comments.sqlite');
 const SNAP_DIR = process.env.SNAP_DIR || join(__dirname, 'data', 'snapshots');
 const SNAPSHOT_CACHE = process.env.SNAPSHOT_CACHE || 'public, max-age=20, stale-while-revalidate=300';
-const RATE_WINDOW_MS = 60_000, RATE_MAX = 30; // writes per client ip per minute
+const RATE_WINDOW_MS = 60_000, RATE_MAX = Number(process.env.RATE_MAX || 120); // writes per client ip per minute
 
 const store = openStore(DB_PATH);
 const recent = new Map();

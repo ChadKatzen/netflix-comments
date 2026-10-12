@@ -38,14 +38,14 @@ const chrome = spawn(CHROME, [
   '--headless=new', `--remote-debugging-port=${PORT}`, `--user-data-dir=${PROFILE}`,
   `--load-extension=${EXT}`, `--disable-extensions-except=${EXT}`,
   '--no-first-run', '--no-default-browser-check', '--window-size=1400,900', '--autoplay-policy=no-user-gesture-required',
-  '--mute-audio', 'about:blank',
+  '--mute-audio', '--use-mock-keychain', '--password-store=basic', 'about:blank',
 ], { stdio: ['ignore', 'pipe', 'pipe'] });
 let chromeLog = ''; chrome.stderr.on('data', (d) => (chromeLog += d));
 const kill = () => { try { chrome.kill('SIGKILL'); } catch {} };
 process.on('exit', kill);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-async function waitPort() { for (let i = 0; i < 60; i++) { try { const r = await fetch(`http://localhost:${PORT}/json/version`); if (r.ok) return r.json(); } catch {} await sleep(250); } throw new Error('chrome did not start\n' + chromeLog); }
+async function waitPort() { for (let i = 0; i < 60; i++) { try { const r = await fetch(`http://127.0.0.1:${PORT}/json/version`); if (r.ok) return r.json(); } catch {} await sleep(250); } throw new Error('chrome did not start\n' + chromeLog); }
 
 class CDP {
   constructor(ws) { this.ws = ws; this.id = 0; this.pending = new Map(); this.events = []; ws.onmessage = (m) => { const msg = JSON.parse(m.data); if (msg.id) { const p = this.pending.get(msg.id); this.pending.delete(msg.id); msg.error ? p.rej(new Error(JSON.stringify(msg.error))) : p.res(msg.result); } else this.events.push(msg); }; }
@@ -61,8 +61,8 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
 try {
   await waitPort();
   // confirm the extension loaded (service worker target exists)
-  let targets = await (await fetch(`http://localhost:${PORT}/json/list`)).json();
-  for (let i = 0; i < 20 && !targets.some((t) => t.type === 'service_worker'); i++) { await sleep(250); targets = await (await fetch(`http://localhost:${PORT}/json/list`)).json(); }
+  let targets = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json();
+  for (let i = 0; i < 20 && !targets.some((t) => t.type === 'service_worker'); i++) { await sleep(250); targets = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json(); }
   const sw = targets.find((t) => t.type === 'service_worker' && /background\.js$/.test(t.url));
   check('extension service worker registered', !!sw, sw?.url);
   const extId = sw ? new URL(sw.url).hostname : null;
@@ -75,7 +75,7 @@ try {
   const BODY = 'posted from e2e ' + VID;
 
   // open the mock player
-  const page = await (await fetch(`http://localhost:${PORT}/json/new?http://localhost:3131/watch/${VID}`, { method: 'PUT' })).json();
+  const page = await (await fetch(`http://127.0.0.1:${PORT}/json/new?http://localhost:3131/watch/${VID}`, { method: 'PUT' })).json();
   const c = await CDP.connect(page.webSocketDebuggerUrl);
   await c.send('Runtime.enable'); await c.send('Page.enable'); await c.send('Log.enable');
   await sleep(2500);
@@ -179,7 +179,7 @@ try {
 
   // popup page loads
   if (extId) {
-    const pop = await (await fetch(`http://localhost:${PORT}/json/new?about:blank`, { method: 'PUT' })).json();
+    const pop = await (await fetch(`http://127.0.0.1:${PORT}/json/new?about:blank`, { method: 'PUT' })).json();
     const p = await CDP.connect(pop.webSocketDebuggerUrl); await p.send('Runtime.enable'); await p.send('Page.enable');
     await p.send('Page.navigate', { url: `chrome-extension://${extId}/popup.html` });
     for (let i = 0; i < 40 && !(await p.eval(`!!document.getElementById('dot')`)); i++) await sleep(250);
