@@ -8,7 +8,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 button:focus-visible, textarea:focus-visible { outline: 2px solid var(--red); outline-offset: 1px; }
 
 /* toggle pill (drawer closed) */
-.pill { pointer-events: auto; position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: var(--bg); backdrop-filter: blur(14px); border: 1px solid var(--line); border-right: 0; border-radius: 14px 0 0 14px; padding: 10px 12px 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: 0 6px 24px rgba(0,0,0,.4); transition: background .15s; }
+.pill { pointer-events: auto; position: absolute; right: 0; top: 45%; transform: translateY(-50%); background: var(--bg); backdrop-filter: blur(14px); border: 1px solid var(--line); border-right: 0; border-radius: 14px 0 0 14px; padding: 10px 12px 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: 0 6px 24px rgba(0,0,0,.4); transition: background .15s; }
 .pill:hover { background: rgba(30,30,34,.96); }
 .pill .n { font-weight: 700; font-size: 13px; }
 .pill .ic { width: 22px; height: 22px; fill: #fff; }
@@ -16,7 +16,7 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--red); ou
 .pill .live.on { display: block; }
 
 /* drawer */
-.drawer { pointer-events: auto; position: absolute; top: 12px; right: 12px; bottom: 12px; width: 380px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; background: var(--bg); backdrop-filter: blur(18px); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 48px rgba(0,0,0,.55); overflow: hidden; }
+.drawer { pointer-events: auto; position: absolute; top: 12px; right: 12px; bottom: 92px; width: 380px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; background: var(--bg); backdrop-filter: blur(18px); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 12px 48px rgba(0,0,0,.55); overflow: hidden; }
 .hdr { display: flex; align-items: center; gap: 8px; padding: 12px 12px 8px 16px; }
 .hdr .ttl { flex: 1; min-width: 0; }
 .hdr .name { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -96,6 +96,7 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
 .toasts { position: absolute; left: 24px; bottom: 130px; display: flex; flex-direction: column; gap: 8px; max-width: min(360px, 36vw); }
 .toast { pointer-events: auto; display: flex; gap: 10px; align-items: flex-start; background: var(--bg); backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; box-shadow: 0 8px 28px rgba(0,0,0,.45); animation: pop .25s ease-out; cursor: pointer; }
 .toast.out { animation: fade .4s ease-in forwards; }
+.toast .pin { font-size: 10px; color: var(--muted); margin-top: 3px; }
 .toast .av { width: 28px; height: 28px; font-size: 12px; }
 .toast .who { font-size: 12px; color: var(--muted); }
 .toast .who b { color: #fff; }

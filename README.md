@@ -42,7 +42,8 @@ The extension defaults to `http://localhost:3131` for both reads and writes. Cha
 | Spoiler guard | Comments ahead of the playhead are hidden by default. Eye icon in the header or "Show anyway" reveals them. |
 | Jump to a moment | Click a comment's time pill, or click the density strip under the header. |
 | Likes, replies, delete | On each comment. Replies inherit the parent's timestamp. You can delete only your own. |
-| Pop-ups | With the drawer closed (or on Top/New), passing a comment pops a bubble bottom-left for ~6 s. Click it to open the drawer there. |
+| Pop-ups | With the drawer closed (or on Top/New), passing a comment pops a bubble bottom-left for ~6 s of playback. Pause and they stay until you resume. Click one to open the drawer there. |
+| Fullscreen | Works; the overlay follows the player into fullscreen. |
 
 Identity is an anonymous id generated on first use (see popup → Identity). There is no login; see Limitations.
 
@@ -109,7 +110,12 @@ no console errors, popup health check.
 cd server && npm start &
 npx @puppeteer/browsers install chrome@stable      # Chrome for Testing; branded Chrome ignores --load-extension since 137
 node dev/e2e.mjs                                   # or CHROME_BIN=/path/to/chrome node dev/e2e.mjs
+node dev/tour.mjs                                  # opens a visible window, seeds a title, screenshots each state
 ```
+
+`dev/tour.mjs` is the "use it like a viewer" walkthrough: it seeds 28 comments with likes and replies, then screenshots
+landing, live, replies, composing, posted, Top, spoilers shown, pop-ups with the drawer closed, pop-ups surviving a
+pause, fullscreen, New, and a small window. Add `KEEP=1` to leave the browser open afterwards.
 
 Verified here: 24/24 on Chrome for Testing 148. On Chrome for Testing 155 headless, 23/24: that build refuses to
 serve extension files from subdirectories to the service worker (hence `popup.html` lives at the extension root).

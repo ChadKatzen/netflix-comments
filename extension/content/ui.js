@@ -386,7 +386,15 @@
       el.innerHTML = `<div class="av" style="background:${avatarColor(c.authorId)}">${esc(initial(c.authorName))}</div><div><div class="who"><b>${esc(c.authorName)}</b> · ${fmtTime(c.t)}${c.likeCount ? ` · ♥ ${compact(c.likeCount)}` : ''}</div><div class="txt">${esc(c.body)}</div></div>`;
       this.el.toasts.appendChild(el);
       while (this.el.toasts.childElementCount > MAX_TOASTS) this.el.toasts.firstElementChild.remove();
-      setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }, TOAST_MS);
+      this.expireToast(el, TOAST_MS);
+    }
+    // A toast only counts down while the video plays, so pausing to read keeps it on screen.
+    expireToast(el, ms) {
+      setTimeout(() => {
+        if (!el.isConnected) return;
+        if (this.video?.paused) return this.expireToast(el, 500);
+        el.classList.add('out'); setTimeout(() => el.remove(), 400);
+      }, ms);
     }
   }
 

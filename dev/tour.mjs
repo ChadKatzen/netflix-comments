@@ -117,6 +117,22 @@ await ev(`${sh}.querySelector('.close').click()`);
 await seekTo(139.5); await ev(`${video}.play()`); await sleep(3200);
 await shot('08-closed-toasts');
 
+// 7b. pause while toasts are up: they must stay
+await ev(`${video}.pause()`); await sleep(7000);
+await shot('08b-paused-toasts-persist');
+// 7c. fullscreen via the player's own F hotkey (trusted key event through CDP)
+await ev(`${video}.play()`);
+await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'f', code: 'KeyF', text: 'f' });
+await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'f', code: 'KeyF' });
+await sleep(1200);
+const fs = await ev(`!!document.fullscreenElement + '|host-in-fs=' + (document.fullscreenElement?.contains(document.getElementById('nfc-host')) ?? false)`);
+console.log('fullscreen:', fs);
+await ev(`${sh}.querySelector('.pill').click()`); await sleep(600);
+await shot('08c-fullscreen-drawer');
+await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape' }); await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape' });
+await ev(`document.exitFullscreen().catch(()=>{})`); await sleep(800);
+await ev(`${sh}.querySelector('.close').click()`);
+
 // 8. hover strip tooltip + new tab
 await ev(`${sh}.querySelector('.pill').click()`); await sleep(300);
 await ev(`${sh}.querySelector('.tab[data-tab=new]').click()`); await sleep(400);
