@@ -1,6 +1,6 @@
 # netflix-comments
 
-Time-bound comments on Netflix. Comments are pinned to a moment in the show (SoundCloud-style timeline), with
+Time-bound comments on Hulu and Netflix. Comments are pinned to a moment in the show (SoundCloud-style timeline), with
 Live / Top / New tabs, likes and replies (TikTok-style), a spoiler guard that hides comments ahead of where you
 are, and pop-up bubbles as the playhead passes comments.
 
@@ -26,8 +26,8 @@ cd server && npm start          # http://localhost:3131  (Node >= 22.5, zero dep
 1. Chrome → `chrome://extensions` → enable **Developer mode** → **Load unpacked** → pick the `extension/` folder.
 2. Open the mock player: <http://localhost:3131/watch/demo> (a silent 10-minute clip; add `?src=bbb` for real
    video). The comment drawer appears on the right.
-3. Or open anything on <https://www.netflix.com/watch/…>. Same drawer, keyed by Netflix's video id (each episode
-   has its own).
+3. Or open an episode on <https://www.hulu.com/watch/…> or <https://www.netflix.com/watch/…>. Same drawer, keyed
+   per episode (`hulu-<uuid>` / `nf-<id>`).
 
 The extension defaults to `http://localhost:3131` for both reads and writes. Change the URLs in the toolbar popup.
 
@@ -120,12 +120,41 @@ pause, fullscreen, New, and a small window. Add `KEEP=1` to leave the browser op
 Verified here: 24/24 on Chrome for Testing 148. On Chrome for Testing 155 headless, 23/24: that build refuses to
 serve extension files from subdirectories to the service worker (hence `popup.html` lives at the extension root).
 
+## Sites
+
+Site-specific behaviour lives in `extension/content/sites.js` (one adapter per site: player-page detection,
+episode id, title, which `<video>` is the show, content clock, seek, play/pause, where to mount the overlay).
+
+### Hulu — verified on the live player (2026-10-18)
+
+Checked by injecting the overlay into a logged-in Hulu tab (`dev/build-inject.mjs` builds a shimmed bundle for
+that) and driving it like a viewer. What Hulu does differently, and how the adapter copes:
+
+* **Ads are stitched into the stream.** `video.currentTime` runs ahead of the content position by the ads already
+  played (48 s into "9-1-1: Nashville" S1E1). The adapter reads Hulu's own timeline (`.Timeline__slider`
+  `aria-valuenow` / `aria-valuemax`, in seconds, updated every second whether or not controls are shown) as the
+  content clock and remembers the offset.
+* **Setting `video.currentTime` stalls the stream** (Hulu only buffers around *its* position). Seeks are done by
+  clicking Hulu's timeline synthetically at the fraction for the target time; accuracy is ~2 s.
+* **Hulu's controller re-asserts play state.** Pause/resume fall back to Hulu's play/pause toggle when the
+  element call doesn't stick.
+* **Hulu's player has a focus trap.** Focus outside `.ContentPlayer` snaps back to a player button, so the overlay
+  is mounted inside it; pointer and focus events are stopped at the overlay root.
+* Title: `.PlayerMetadata__titleText` + `.PlayerMetadata__subTitle` → "9-1-1: Nashville · S1 E1 - Pilot".
+  Video: `#content-video-player` (not `#ad-video-player`, `#intro-video-player`, or the preview player).
+
+Verified live: injection, title, clock, typing with spaces inside the composer without triggering Hulu hotkeys,
+pause on compose, posting, seeking from a comment's timestamp, pop-ups as playback passes a comment.
+
+### Netflix — not yet verified
+
+Netflix has never been exercised live; the mock player mirrors its URL shape, a plain `<video>` and document-level
+hotkeys. The title selector (`[data-uia="video-title"]`, visible only while controls are shown), seeking via
+`video.currentTime`, and fullscreen re-parenting are best-effort until tried.
+
 ## What is **not** verified
 
-* **Netflix itself.** The content script was exercised only on the mock player, which mirrors Netflix's URL shape
-  (`/watch/<id>`), a plain `<video>` element and document-level hotkeys. On Netflix, the title selector
-  (`[data-uia="video-title"]`, visible only while controls are shown), seeking by setting `video.currentTime`,
-  and fullscreen re-parenting are best-effort and untested.
+* **Netflix itself** (above).
 * **Cloudflare deployment** (above).
 
 ## Limitations / next steps
@@ -140,9 +169,11 @@ serve extension files from subdirectories to the service worker (hence `popup.ht
 ## Layout
 
 ```
-extension/         Chrome extension (MV3): content/ overlay, background.js fetch proxy, popup.html settings
+extension/         Chrome extension (MV3): content/ overlay (+ sites.js adapters), background.js fetch proxy, popup.html
 server/            Node dev/self-host server: write API + snapshot renderer + mock player (public/)
 server/shared/     routes, SQL, snapshot builder — shared with the Worker
 edge/              Cloudflare Worker (D1 + R2 + cron) — unverified
 dev/e2e.mjs        end-to-end browser test
+dev/tour.mjs       visible-browser viewer walkthrough with screenshots
+dev/build-inject.mjs  builds dev/inject.js, a shimmed bundle to paste into a real player page (OFFLINE=1 = fake data)
 ```

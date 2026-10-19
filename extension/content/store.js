@@ -81,7 +81,7 @@
       if (!c) return;
       this.meta = c.meta ?? null;
       this.metaAt = 0; // cached meta is stale by definition; refetch soon
-      for (const [b, comments] of Object.entries(c.buckets ?? {})) this.buckets.set(Number(b), { comments, at: 0 });
+      for (const [b, v] of Object.entries(c.buckets ?? {})) this.buckets.set(Number(b), Array.isArray(v) ? { comments: v, at: 0, gen: 0 } : { comments: v.comments ?? [], at: 0, gen: v.gen ?? 0 });
       this.mine = (c.mine ?? []).filter((m) => m.pending || Date.now() - m.createdAt < MINE_TTL);
       this.likes = c.likes ?? {};
       this.deleted = c.deleted ?? {};
@@ -89,7 +89,7 @@
 
     save = NFC.debounce(async () => {
       const buckets = {};
-      for (const [b, v] of this.buckets) buckets[b] = v.comments;
+      for (const [b, v] of this.buckets) buckets[b] = { comments: v.comments, gen: v.gen ?? 0 };
       await S.set('local', this.key(), { meta: this.meta, buckets, mine: this.mine, likes: this.likes, deleted: this.deleted, savedAt: Date.now() });
       pruneCache();
     }, 500);
@@ -122,7 +122,7 @@
       this.loading.add(b);
       try {
         const r = await NFC.http(store.readUrl(`t/${this.videoId}/b/${b}.json`));
-        if (r.ok) { this.buckets.set(b, { comments: r.body.comments ?? [], at: Date.now() }); this.offline = false; }
+        if (r.ok) { this.buckets.set(b, { comments: r.body.comments ?? [], at: Date.now(), gen: r.body.generatedAt ?? Date.now() }); this.offline = false; }
         else if (r.status === 404) this.buckets.set(b, { comments: [], at: Date.now() });
         else this.offline = !!r.error;
         this.save();
@@ -132,14 +132,20 @@
 
     /** Merged, de-duplicated view with local overlays applied. */
     all() {
+      // Each copy of a comment remembers when its snapshot was generated (_gen). Buckets and meta.json are
+      // separate files rendered at different times, so a like must be overlaid per copy, not per title.
       const byId = new Map();
-      const put = (c) => { if (!byId.has(c.id)) byId.set(c.id, { ...c }); };
-      for (const v of this.buckets.values()) v.comments.forEach(put);
-      (this.meta?.top ?? []).forEach(put);
-      (this.meta?.newest ?? []).forEach(put);
-      const gen = this.meta?.generatedAt ?? 0;
+      const put = (c, gen) => {
+        const cur = byId.get(c.id);
+        if (!cur || gen > cur._gen) byId.set(c.id, { ...c, _gen: gen }); // prefer the freshest copy
+      };
+      for (const v of this.buckets.values()) v.comments.forEach((c) => put(c, v.gen ?? 0));
+      const metaGen = this.meta?.generatedAt ?? 0;
+      (this.meta?.top ?? []).forEach((c) => put(c, metaGen));
+      (this.meta?.newest ?? []).forEach((c) => put(c, metaGen));
+      const gen = metaGen;
       for (const m of this.mine) {
-        if (!byId.has(m.id)) byId.set(m.id, { ...m, mine: true });
+        if (!byId.has(m.id)) byId.set(m.id, { ...m, mine: true, _gen: m.ackedAt ?? Infinity });
         else byId.get(m.id).mine = true;
       }
       const out = [];
@@ -149,8 +155,9 @@
         const lk = this.likes[c.id];
         if (lk) {
           c.liked = lk.liked;
-          if (lk.at > gen) c.likeCount = Math.max(0, (c.likeCount ?? 0) + (lk.liked ? 1 : -1)); // snapshot predates my action
+          if (lk.at > c._gen) c.likeCount = Math.max(0, (c.likeCount ?? 0) + (lk.liked ? 1 : -1)); // this copy predates my action
         }
+        delete c._gen;
         out.push(c);
       }
       // reply counts: trust snapshot, but add local pending replies
@@ -194,7 +201,7 @@
 
     ack(tempId, serverComment) {
       const i = this.mine.findIndex((m) => m.id === tempId);
-      if (i >= 0) this.mine[i] = { ...serverComment, mine: true };
+      if (i >= 0) this.mine[i] = { ...serverComment, mine: true, ackedAt: Date.now() };
       this.save();
       store.emit('data');
     }
