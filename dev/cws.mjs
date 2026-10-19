@@ -55,7 +55,7 @@ if (cmd === 'auth-url') {
     const srv = http.createServer(async (req, res) => {
       const code = new URL(req.url, REDIRECT).searchParams.get('code');
       if (!code) { res.writeHead(404); return res.end('no code'); }
-      try { await exchange(code); res.end('Stream Comments publisher authorized. You can close this tab.'); console.log('tokens saved to', P.token); }
+      try { await exchange(code); res.end('Community Swim publisher authorized. You can close this tab.'); console.log('tokens saved to', P.token); }
       catch (e) { res.writeHead(500); res.end('exchange failed: ' + e.message); console.error(e); }
       srv.close(); resolve();
     });

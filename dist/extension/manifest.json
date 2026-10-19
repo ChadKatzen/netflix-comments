@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Stream Comments",
-  "version": "0.1.0",
+  "name": "Community Swim",
+  "version": "0.1.1",
   "description": "Time-bound comments on Netflix and Hulu: SoundCloud-style timeline + TikTok-style top comments.",
   "icons": {
     "16": "icons/16.png",

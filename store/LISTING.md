@@ -1,15 +1,15 @@
-# Chrome Web Store listing — Stream Comments
+# Chrome Web Store listing — Community Swim
 
 Item id: `ppebabldjhgohfhpjdfpdbloddnpmbfi` (created 2026-10-18 via the API).
 
 Package uploads and publishing are automated: `node dev/build-store.mjs` builds the zip, then
-`node dev/cws.mjs upload dist/stream-comments-<version>.zip` and `node dev/cws.mjs publish` (credentials in
+`node dev/cws.mjs upload dist/community-swim-<version>.zip` and `node dev/cws.mjs publish` (credentials in
 `~/.config/cws/`, set up once with `auth-url` / `auth-serve`). The store listing, screenshots and privacy answers
 below are dashboard-only (no API) and were pasted by hand.
 
 ## Store listing
 
-**Name:** Stream Comments
+**Name:** Community Swim
 
 **Summary** (≤132 chars):
 Time-stamped comments on Hulu and Netflix: see what people said at this exact moment, with top comments and a spoiler guard.
@@ -17,7 +17,7 @@ Time-stamped comments on Hulu and Netflix: see what people said at this exact mo
 **Category:** Entertainment · **Language:** English
 
 **Description:**
-Stream Comments adds a comment layer to the Hulu and Netflix web players, pinned to the moment in the episode.
+Community Swim adds a comment layer to the Hulu and Netflix web players, pinned to the moment in the episode.
 
 • Live: as you watch, comments from this exact moment surface in the drawer. Pause on a big scene and read what everyone said about it, or add your own.
 • Top and New: the most-liked and most recent comments for the episode, TikTok-style, with likes and replies.

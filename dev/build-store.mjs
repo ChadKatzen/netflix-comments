@@ -13,7 +13,7 @@ m.content_scripts[0].matches = m.content_scripts[0].matches.filter((x) => !/loca
 m.host_permissions = m.host_permissions.filter((x) => !/localhost|127\.0\.0\.1/.test(x));
 delete m.optional_host_permissions; // the store flags broad optional hosts; self-hosters can edit the manifest
 writeFileSync(join(out, 'manifest.json'), JSON.stringify(m, null, 2) + '\n');
-const zip = join(root, 'dist', `stream-comments-${m.version}.zip`);
+const zip = join(root, 'dist', `community-swim-${m.version}.zip`);
 rmSync(zip, { force: true });
 execSync(`cd "${out}" && zip -qr "${zip}" . -x ".*"`);
 console.log('built', zip);
