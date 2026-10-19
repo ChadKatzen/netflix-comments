@@ -125,7 +125,30 @@ window.NFC = window.NFC || {};
     }
     return { now: Math.max(0, v.currentTime - huluOffset), duration: huluDuration };
   };
-  const huluSeek = (v, t) => { v.currentTime = t + huluOffset; };
+  // Setting video.currentTime on Hulu stalls the stream (its engine only buffers around *its* position), so we
+  // seek the way a mouse would: a synthetic click on Hulu's timeline at the fraction for t. Verified live.
+  const huluSeek = (v, t) => {
+    const s = document.querySelector('.Timeline__slider[aria-valuemax]');
+    const max = s && Number(s.getAttribute('aria-valuemax'));
+    if (!s || !(max > 0)) return;
+    const r = s.getBoundingClientRect();
+    if (!r.width) return; // controls not laid out (e.g. hidden); nothing safe to do
+    const x = r.left + Math.min(1, Math.max(0, t / max)) * r.width, y = r.top + r.height / 2;
+    const target = document.elementFromPoint(x, y) || s;
+    const opts = (down) => ({ bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0, buttons: down ? 1 : 0, view: window });
+    target.dispatchEvent(new PointerEvent('pointerdown', { ...opts(true), pointerId: 1, pointerType: 'mouse', isPrimary: true }));
+    target.dispatchEvent(new MouseEvent('mousedown', opts(true)));
+    target.dispatchEvent(new PointerEvent('pointerup', { ...opts(false), pointerId: 1, pointerType: 'mouse', isPrimary: true }));
+    target.dispatchEvent(new MouseEvent('mouseup', opts(false)));
+    target.dispatchEvent(new MouseEvent('click', opts(false)));
+  };
+  // Hulu's controller re-asserts its own play state, so fall back to its play/pause toggle when the element
+  // call doesn't stick. The toggle is the first PlaybackControls button (no aria-label).
+  const huluToggle = () => document.querySelector('.PlaybackControls__item.PlayerControlsButton, .PlaybackControls__item');
+  const huluPause = (v) => { v.pause(); setTimeout(() => { if (!v.paused) huluToggle()?.click(); }, 120); };
+  const huluPlay = (v) => { v.play().catch(() => {}); setTimeout(() => { if (v.paused) huluToggle()?.click(); }, 150); };
+  const defaultPause = (v) => v.pause();
+  const defaultPlay = (v) => v.play().catch(() => {});
 
   NFC.SITES = [
     {
@@ -134,7 +157,7 @@ window.NFC = window.NFC || {};
       videoId: (loc) => { const m = loc.pathname.match(/^\/watch\/(\d+)/); return m ? 'nf-' + m[1] : null; },
       title: () => firstText(['[data-uia="video-title"]', '.watch-video--title-text', '[data-uia="player-title"]']),
       video: () => document.querySelector('video'),
-      clock: defaultClock, seek: defaultSeek,
+      clock: defaultClock, seek: defaultSeek, pause: defaultPause, play: defaultPlay,
       mount: () => document.body,
     },
     {
@@ -150,7 +173,7 @@ window.NFC = window.NFC || {};
       },
       // #content-video-player is the show; #ad-video-player / #intro-video-player / .VideoPreviewPlayer are not.
       video: () => document.getElementById('content-video-player') || document.querySelector('video.ContentPlayer__videoPlayer') || document.querySelector('video'),
-      clock: huluClock, seek: huluSeek,
+      clock: huluClock, seek: huluSeek, pause: huluPause, play: huluPlay,
       // Hulu's player keeps a focus trap: focus outside .ContentPlayer snaps back to a player button, so the
       // overlay must live inside it (verified live 2026-10-18).
       mount: () => document.querySelector('.ContentPlayer') || document.getElementById('web-player-app') || document.body,
@@ -161,7 +184,7 @@ window.NFC = window.NFC || {};
       videoId: (loc) => { const m = loc.pathname.match(/^\/watch\/([^/?#]+)/); return m ? m[1] : null; },
       title: () => firstText(['[data-uia="video-title"]']),
       video: () => document.querySelector('video'),
-      clock: defaultClock, seek: defaultSeek,
+      clock: defaultClock, seek: defaultSeek, pause: defaultPause, play: defaultPlay,
       mount: () => document.body,
     },
   ];
@@ -667,7 +690,11 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
     }
 
     mount() {
-      const parent = document.fullscreenElement || (NFC.site && NFC.site.mount && NFC.site.mount()) || document.body;
+      // Stay inside the site's player container (focus traps); only move to the fullscreen element when the
+      // container isn't part of it.
+      const target = (NFC.site && NFC.site.mount && NFC.site.mount()) || document.body;
+      const fs = document.fullscreenElement;
+      const parent = fs && !fs.contains(target) && fs !== target ? fs : target;
       if (this.host.parentNode !== parent) parent.appendChild(this.host);
     }
 
@@ -927,14 +954,14 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
     beginCompose() {
       if (this.composeT == null) { this.composeT = this.replyTo ? this.replyTo.t : this.now; this.el.at.textContent = fmtTime(this.composeT); }
       if (store.settings.pauseOnCompose && this.video && !this.video.paused) {
-        try { this.video.pause(); this.pausedByUs = true; } catch { /* ignore */ }
+        try { NFC.site.pause(this.video); this.pausedByUs = true; } catch { /* ignore */ }
       }
     }
     endCompose() {
       this.composeT = null; this.el.at.textContent = fmtTime(this.now);
       this.el.ta.value = ''; this.el.ta.style.height = 'auto'; this.el.send.disabled = true;
       this.setReply(null);
-      if (this.pausedByUs && this.video) { try { this.video.play(); } catch { /* ignore */ } }
+      if (this.pausedByUs && this.video) { try { NFC.site.play(this.video); } catch { /* ignore */ } }
       this.pausedByUs = false;
     }
     cancelCompose() { this.endCompose(); this.el.ta.blur(); }

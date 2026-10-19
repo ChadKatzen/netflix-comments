@@ -77,7 +77,11 @@
     }
 
     mount() {
-      const parent = document.fullscreenElement || (NFC.site && NFC.site.mount && NFC.site.mount()) || document.body;
+      // Stay inside the site's player container (focus traps); only move to the fullscreen element when the
+      // container isn't part of it.
+      const target = (NFC.site && NFC.site.mount && NFC.site.mount()) || document.body;
+      const fs = document.fullscreenElement;
+      const parent = fs && !fs.contains(target) && fs !== target ? fs : target;
       if (this.host.parentNode !== parent) parent.appendChild(this.host);
     }
 
@@ -337,14 +341,14 @@
     beginCompose() {
       if (this.composeT == null) { this.composeT = this.replyTo ? this.replyTo.t : this.now; this.el.at.textContent = fmtTime(this.composeT); }
       if (store.settings.pauseOnCompose && this.video && !this.video.paused) {
-        try { this.video.pause(); this.pausedByUs = true; } catch { /* ignore */ }
+        try { NFC.site.pause(this.video); this.pausedByUs = true; } catch { /* ignore */ }
       }
     }
     endCompose() {
       this.composeT = null; this.el.at.textContent = fmtTime(this.now);
       this.el.ta.value = ''; this.el.ta.style.height = 'auto'; this.el.send.disabled = true;
       this.setReply(null);
-      if (this.pausedByUs && this.video) { try { this.video.play(); } catch { /* ignore */ } }
+      if (this.pausedByUs && this.video) { try { NFC.site.play(this.video); } catch { /* ignore */ } }
       this.pausedByUs = false;
     }
     cancelCompose() { this.endCompose(); this.el.ta.blur(); }
