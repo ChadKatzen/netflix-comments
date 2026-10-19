@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Community Swim",
-  "version": "0.1.1",
-  "description": "Time-bound comments on Netflix and Hulu: SoundCloud-style timeline + TikTok-style top comments.",
+  "version": "0.1.2",
+  "description": "Time-stamped comments on Hulu and Netflix: see what people said at this exact moment, with top comments and a spoiler guard.",
   "icons": {
     "16": "icons/16.png",
     "48": "icons/48.png",
