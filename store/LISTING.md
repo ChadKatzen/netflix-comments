@@ -1,6 +1,11 @@
 # Chrome Web Store listing — Stream Comments
 
-Paste these into the developer dashboard. Build the zip with `node dev/build-store.mjs` → `dist/stream-comments-<version>.zip`.
+Item id: `ppebabldjhgohfhpjdfpdbloddnpmbfi` (created 2026-10-18 via the API).
+
+Package uploads and publishing are automated: `node dev/build-store.mjs` builds the zip, then
+`node dev/cws.mjs upload dist/stream-comments-<version>.zip` and `node dev/cws.mjs publish` (credentials in
+`~/.config/cws/`, set up once with `auth-url` / `auth-serve`). The store listing, screenshots and privacy answers
+below are dashboard-only (no API) and were pasted by hand.
 
 ## Store listing
 
