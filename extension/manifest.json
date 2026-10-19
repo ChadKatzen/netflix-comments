@@ -1,22 +1,52 @@
 {
   "manifest_version": 3,
-  "name": "Netflix Comments",
+  "name": "Stream Comments",
   "version": "0.1.0",
-  "description": "Time-bound comments on Netflix, SoundCloud-style timeline + TikTok-style top comments.",
-  "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "description": "Time-bound comments on Netflix and Hulu: SoundCloud-style timeline + TikTok-style top comments.",
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
   "action": {
     "default_title": "Netflix Comments",
     "default_popup": "popup.html",
-    "default_icon": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" }
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
   },
-  "background": { "service_worker": "background.js" },
-  "permissions": ["storage"],
-  "host_permissions": ["http://localhost/*", "http://127.0.0.1/*"],
-  "optional_host_permissions": ["https://*/*", "http://*/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["*://*.netflix.com/*", "http://localhost/*", "http://127.0.0.1/*"],
-      "js": ["content/util.js", "content/styles.js", "content/store.js", "content/ui.js", "content/main.js"],
+      "matches": [
+        "*://*.netflix.com/*",
+        "*://*.hulu.com/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "content/util.js",
+        "content/sites.js",
+        "content/styles.js",
+        "content/store.js",
+        "content/ui.js",
+        "content/main.js"
+      ],
       "run_at": "document_idle"
     }
   ]

@@ -55,7 +55,7 @@
 <button class="pill" title="Show comments (Shift+C)">${ICON.chat.replace('<svg', '<svg class="ic"')}<span class="n">0</span><span class="live">LIVE</span></button>
 <div class="drawer">
   <div class="hdr">
-    <div class="ttl"><div class="name">Netflix Comments</div><div class="sub">loading…</div></div>
+    <div class="ttl"><div class="name">Stream Comments</div><div class="sub">loading…</div></div>
     <button class="ib spoiler on" title="Spoiler guard: hiding comments ahead of you">${ICON.eye}</button>
     <button class="ib close" title="Hide (Shift+C)">${ICON.close}</button>
   </div>
@@ -194,7 +194,7 @@
 
     seek(t) {
       if (!this.video || !Number.isFinite(t)) return;
-      try { this.video.currentTime = Math.max(0, Math.min(this.duration || t, t)); } catch (e) { NFC.log('seek failed', e); }
+      try { NFC.site.seek(this.video, Math.max(0, Math.min(this.duration || t, t))); } catch (e) { NFC.log('seek failed', e); }
     }
 
     // ---------- data views ----------

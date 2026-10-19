@@ -45,7 +45,7 @@ const kill = () => { try { chrome.kill('SIGKILL'); } catch {} };
 process.on('exit', kill);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-async function waitPort() { for (let i = 0; i < 60; i++) { try { const r = await fetch(`http://127.0.0.1:${PORT}/json/version`); if (r.ok) return r.json(); } catch {} await sleep(250); } throw new Error('chrome did not start\n' + chromeLog); }
+async function waitPort() { for (let i = 0; i < 240; i++) { try { const r = await fetch(`http://127.0.0.1:${PORT}/json/version`); if (r.ok) return r.json(); } catch {} await sleep(250); } throw new Error('chrome did not start\n' + chromeLog); }
 
 class CDP {
   constructor(ws) { this.ws = ws; this.id = 0; this.pending = new Map(); this.events = []; ws.onmessage = (m) => { const msg = JSON.parse(m.data); if (msg.id) { const p = this.pending.get(msg.id); this.pending.delete(msg.id); msg.error ? p.rej(new Error(JSON.stringify(msg.error))) : p.res(msg.result); } else this.events.push(msg); }; }
@@ -75,10 +75,16 @@ try {
   const BODY = 'posted from e2e ' + VID;
 
   // open the mock player
-  const page = await (await fetch(`http://127.0.0.1:${PORT}/json/new?http://localhost:3131/watch/${VID}`, { method: 'PUT' })).json();
+  // open a blank tab, attach, then navigate: content scripts only inject into pages loaded after the
+  // extension finished registering them, and a tab created directly at the URL can beat that on a cold profile
+  await sleep(1500);
+  const page = await (await fetch(`http://127.0.0.1:${PORT}/json/new?about:blank`, { method: 'PUT' })).json();
   const c = await CDP.connect(page.webSocketDebuggerUrl);
   await c.send('Runtime.enable'); await c.send('Page.enable'); await c.send('Log.enable');
-  await sleep(2500);
+  await c.send('Page.navigate', { url: `http://localhost:3131/watch/${VID}` });
+  // content scripts inject at document_idle; a cold profile can take several seconds
+  for (let i = 0; i < 80; i++) { if (await c.eval(`!!document.getElementById('nfc-host')`)) break; await sleep(250); }
+  await sleep(1500);
 
   const host = () => `document.getElementById('nfc-host')`;
   const sh = () => `${host()}.shadowRoot`;
@@ -111,7 +117,10 @@ try {
   // compose + post at current time via the UI
   await c.eval(`(()=>{const v=document.querySelector('video'); v.play(); })()`);
   await sleep(800);
-  await c.eval(`${sh()}.querySelector('textarea').focus()`);
+  // click the textarea with a trusted pointer event (a programmatic focus() doesn't fire focus events when the
+  // automation window itself isn't focused, which is exactly where a real user differs from a script)
+  const box = await c.eval(`(()=>{const r=${sh()}.querySelector('textarea').getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2};})()`);
+  for (const type of ['mousePressed', 'mouseReleased']) await c.send('Input.dispatchMouseEvent', { type, x: box.x, y: box.y, button: 'left', clickCount: 1 });
   await sleep(300);
   const pausedOnCompose = await c.eval(`document.querySelector('video').paused`);
   check('video pauses when composer focused', pausedOnCompose);

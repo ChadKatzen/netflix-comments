@@ -7,32 +7,14 @@
   const ui = new NFC.UI();
   let videoId = null, video = null, title = null, lastBucket = -1;
 
-  const TITLE_SELECTORS = [
-    '[data-uia="video-title"]',          // Netflix player title block (shows while controls are visible)
-    '.watch-video--title-text',
-    '.video-title',
-    '[data-uia="player-title"]',
-  ];
-  function detectName() {
-    for (const sel of TITLE_SELECTORS) {
-      const el = document.querySelector(sel);
-      if (!el) continue;
-      // Netflix renders show name + episode as adjacent inline elements with no whitespace between them.
-      const parts = [...el.querySelectorAll('h4, span, div')].map((n) => n.children.length ? '' : n.textContent.trim()).filter(Boolean);
-      const text = (parts.length ? parts.join(' ') : el.textContent).replace(/\s+/g, ' ').trim();
-      if (text) return text.slice(0, 200);
-    }
-    return '';
-  }
-
-  function parseVideoId() {
-    const m = location.pathname.match(/\/watch\/([^/?#]+)/);
-    return m ? m[1] : null;
-  }
+  const site = NFC.site;
+  if (!site) return;
+  const detectName = () => site.title();
+  const parseVideoId = () => site.videoId(location);
 
   async function sync() {
     const id = parseVideoId();
-    const v = document.querySelector('video');
+    const v = site.video();
     if (id !== videoId) {
       videoId = id; lastBucket = -1;
       if (!id) { title = null; ui.host.remove(); return; }
@@ -48,7 +30,7 @@
     }
     if (title && !title.reported) {
       const name = detectName();
-      const dur = v && Number.isFinite(v.duration) && v.duration > 0 ? v.duration : null;
+      const dur = v ? site.clock(v).duration : null;
       if (name && dur) title.reportTitle(name, dur);
       else if (name && !title.name) { title.name = name; ui.renderHeader(); }
     }
@@ -56,8 +38,8 @@
 
   function onTime() {
     if (!video || !title) return;
-    const now = video.currentTime || 0;
-    ui.tick(now, video.duration);
+    const { now, duration } = site.clock(video);
+    ui.tick(now, duration);
     const b = NFC.bucketOf(now);
     if (b !== lastBucket) { lastBucket = b; [b - 1, b, b + 1].forEach((x) => title.ensureBucket(x)); }
     title.fetchMeta(); // no-op if fresh

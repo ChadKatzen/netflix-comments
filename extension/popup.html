@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Netflix Comments</title>
+<title>Stream Comments</title>
 <style>
   body { width: 320px; margin: 0; padding: 14px 16px 16px; font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #141416; color: #eee; }
   h1 { font-size: 15px; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
@@ -24,7 +24,7 @@
 </style>
 </head>
 <body>
-  <h1><span class="dot" id="dot"></span>Netflix Comments</h1>
+  <h1><span class="dot" id="dot"></span>Stream Comments</h1>
 
   <label for="displayName">Display name</label>
   <input type="text" id="displayName" maxlength="40" placeholder="viewer-1234">
@@ -45,7 +45,7 @@
     <summary>Identity</summary>
     <p>Your anonymous id: <code id="uid"></code><br>Comments and likes are tied to it. Resetting makes a fresh identity (you lose the ability to delete old comments).</p>
     <button class="sec" id="reset">Reset identity</button>
-    <p>Hotkey on Netflix: <code>Shift+C</code> toggles the drawer / focuses the composer.</p>
+    <p>Hotkey on Netflix / Hulu: <code>Shift+C</code> toggles the drawer / focuses the composer.</p>
   </details>
   <script src="popup.js"></script>
 </body>
