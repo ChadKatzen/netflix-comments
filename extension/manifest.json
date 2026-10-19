@@ -25,7 +25,8 @@
   ],
   "host_permissions": [
     "http://localhost/*",
-    "http://127.0.0.1/*"
+    "http://127.0.0.1/*",
+    "https://*.workers.dev/*"
   ],
   "optional_host_permissions": [
     "https://*/*",

@@ -8,8 +8,8 @@
 
   const DEFAULT_SETTINGS = {
     displayName: '',
-    readBase: 'http://localhost:3131',
-    writeBase: 'http://localhost:3131',
+    readBase: 'https://netflix-comments-api.katzen-chad.workers.dev',
+    writeBase: 'https://netflix-comments-api.katzen-chad.workers.dev',
     spoilerGuard: true,
     showToasts: true,
     pauseOnCompose: true,
@@ -27,6 +27,8 @@
     async init() {
       const saved = await S.get('sync', 'settings', {});
       this.settings = { ...DEFAULT_SETTINGS, ...saved };
+      // On the local mock player, default to the local dev server unless the user explicitly saved URLs.
+      if (NFC.site?.name === 'mock' && saved.readBase === undefined) this.settings.readBase = this.settings.writeBase = 'http://localhost:3131';
       let user = await S.get('local', 'user', null);
       if (!user?.userId) {
         user = { userId: 'u_' + NFC.uuid().replace(/-/g, '').slice(0, 24), createdAt: Date.now() };

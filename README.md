@@ -29,7 +29,8 @@ cd server && npm start          # http://localhost:3131  (Node >= 22.5, zero dep
 3. Or open an episode on <https://www.hulu.com/watch/…> or <https://www.netflix.com/watch/…>. Same drawer, keyed
    per episode (`hulu-<uuid>` / `nf-<id>`).
 
-The extension defaults to `http://localhost:3131` for both reads and writes. Change the URLs in the toolbar popup.
+The extension defaults to the deployed server for Hulu/Netflix and to `http://localhost:3131` on the mock player.
+Change either URL in the toolbar popup.
 
 ## Using it
 
@@ -61,26 +62,24 @@ Identity is an anonymous id generated on first use (see popup → Identity). The
   state is tracked client-side so snapshots are identical for every user (and therefore cacheable).
 * Snapshot files are the contract. Any host that can write files and serve them with cache headers works.
 
-### Deploying on Cloudflare (free / $5 tier) — *written, not yet deployed*
+### Deployed on Cloudflare (free tier) — live since 2026-10-18
 
-`edge/` contains a Worker that serves the write API from **D1** and a cron that renders dirty titles to **R2**.
-Reads go straight to the R2 bucket's public custom domain with Cloudflare's cache in front, so they invoke no
-Worker and count against nothing. I could not deploy it from this machine, so treat the steps as a checklist:
+Production: **https://netflix-comments-api.katzen-chad.workers.dev** (write API, and reads of `/t/*` served from R2 through the Worker). The extension
+defaults to it. `edge/` holds the Worker (write API from **D1**, a minute cron that renders dirty titles to
+**R2**), and `edge/deploy.sh` recreates the whole thing:
 
 ```bash
-npm i -g wrangler && wrangler login
-cd edge
-wrangler d1 create netflix-comments                 # paste database_id into wrangler.toml
-wrangler d1 execute netflix-comments --remote --file=schema.sql
-wrangler r2 bucket create netflix-comments-snapshots
-wrangler deploy
+cd edge && npx wrangler@4 login && ./deploy.sh
 ```
 
-Then in the Cloudflare dashboard: give the R2 bucket a public custom domain (e.g. `comments-cdn.example.com`),
-add a cache rule for it (cache everything, edge TTL ≥ 60 s), and point the extension popup's *read URL* at it
-and *write URL* at the Worker's URL. Rough cost at 2M viewers: reads ≈ $0 (CDN hits), writes well inside the
-$5/month Workers paid plan unless comment volume is enormous. D1 free tier allows 100k writes/day; above that it's
-pennies per million.
+Account prerequisites, both one-time clicks in the dashboard: a `workers.dev` subdomain, and the R2
+subscription (free tier: 10 GB, 10M reads/month, $0 due). Verified live: health, title, comment, like,
+validation, cron render, snapshot read with cache headers.
+
+To go from "free for friends" to "free for millions", move reads off the Worker: give the R2 bucket a public
+custom domain, add a cache-everything rule (edge TTL ≥ 60 s), set `SERVE_SNAPSHOTS = "false"` in
+`wrangler.toml`, and point the popup's *read URL* at the bucket domain. Cached reads then invoke nothing and
+cost nothing; writes stay well inside free tiers unless comment volume is enormous.
 
 ### Self-hosting instead
 
@@ -155,7 +154,7 @@ hotkeys. The title selector (`[data-uia="video-title"]`, visible only while cont
 ## What is **not** verified
 
 * **Netflix itself** (above).
-* **Cloudflare deployment** (above).
+* Nothing else: Cloudflare deployment verified live 2026-10-18.
 
 ## Limitations / next steps
 

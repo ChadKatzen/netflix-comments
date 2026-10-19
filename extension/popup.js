@@ -1,4 +1,4 @@
-const DEFAULTS = { displayName: '', readBase: 'http://localhost:3131', writeBase: 'http://localhost:3131', spoilerGuard: true, showToasts: true, pauseOnCompose: true, panelOpen: true };
+const DEFAULTS = { displayName: '', readBase: 'https://netflix-comments-api.katzen-chad.workers.dev', writeBase: 'https://netflix-comments-api.katzen-chad.workers.dev', spoilerGuard: true, showToasts: true, pauseOnCompose: true, panelOpen: true };
 const $ = (id) => document.getElementById(id);
 const fields = ['displayName', 'readBase', 'writeBase'];
 const checks = ['spoilerGuard', 'showToasts', 'pauseOnCompose'];

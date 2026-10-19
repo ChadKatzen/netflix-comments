@@ -11,7 +11,7 @@
   window.chrome = window.chrome || {};
   chrome.storage = { sync: area('sync'), local: area('local'), onChanged: { addListener() {} } };
   chrome.runtime = chrome.runtime || {};
-  const OFFLINE = true;
+  const OFFLINE = false;
   chrome.runtime.sendMessage = (msg, cb) => {
     if (msg.type !== 'fetch') return cb && cb({ error: 'unsupported' });
     if (OFFLINE) return setTimeout(() => cb({ error: 'network: offline shim' }), 50); // https pages can't reach localhost
@@ -33,7 +33,7 @@
     const top = comments.filter((c) => c.parentId == null).sort((a, b) => b.likeCount - a.likeCount);
     mem.local['title:' + vid] = { meta: { videoId: vid, name: '', duration, count: top.length, totalWithReplies: comments.length, bucketSeconds: B, bucketCounts, histSeconds: HS, hist, top, newest: [...top].sort((a, b) => b.createdAt - a.createdAt), generatedAt: Date.now() - 60e3 }, buckets, mine: [], likes: {}, deleted: {}, savedAt: Date.now() };
   }
-  mem.sync.settings = { readBase: "http://localhost:3131", writeBase: "http://localhost:3131", displayName: 'chad', spoilerGuard: true, showToasts: true, pauseOnCompose: true, panelOpen: true };
+  mem.sync.settings = { readBase: "https://netflix-comments-api.katzen-chad.workers.dev", writeBase: "https://netflix-comments-api.katzen-chad.workers.dev", displayName: 'chad', spoilerGuard: true, showToasts: true, pauseOnCompose: true, panelOpen: true };
 })();
 
 // Shared helpers for the content scripts. Everything lives under window.NFC to avoid globals.
@@ -309,8 +309,8 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
 
   const DEFAULT_SETTINGS = {
     displayName: '',
-    readBase: 'http://localhost:3131',
-    writeBase: 'http://localhost:3131',
+    readBase: 'https://netflix-comments-api.katzen-chad.workers.dev',
+    writeBase: 'https://netflix-comments-api.katzen-chad.workers.dev',
     spoilerGuard: true,
     showToasts: true,
     pauseOnCompose: true,
@@ -328,6 +328,8 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
     async init() {
       const saved = await S.get('sync', 'settings', {});
       this.settings = { ...DEFAULT_SETTINGS, ...saved };
+      // On the local mock player, default to the local dev server unless the user explicitly saved URLs.
+      if (NFC.site?.name === 'mock' && saved.readBase === undefined) this.settings.readBase = this.settings.writeBase = 'http://localhost:3131';
       let user = await S.get('local', 'user', null);
       if (!user?.userId) {
         user = { userId: 'u_' + NFC.uuid().replace(/-/g, '').slice(0, 24), createdAt: Date.now() };

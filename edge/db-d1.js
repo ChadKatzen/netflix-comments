@@ -1,6 +1,5 @@
 // Cloudflare D1 adapter implementing the same async store interface as server/db-node.js.
-// UNVERIFIED: written against the documented D1 client API (prepare().bind().first()/all()/run()),
-// not yet deployed. See README "Deploying to Cloudflare".
+// Verified against the deployed D1 database 2026-10-18.
 import { HttpError, SQL, rowToComment, rowToTitle } from '../server/shared/routes.js';
 
 export function d1Store(DB) {
