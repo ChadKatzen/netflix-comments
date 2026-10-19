@@ -77,13 +77,15 @@
     }
 
     mount() {
-      const parent = document.fullscreenElement || document.body;
+      const parent = document.fullscreenElement || (NFC.site && NFC.site.mount && NFC.site.mount()) || document.body;
       if (this.host.parentNode !== parent) parent.appendChild(this.host);
     }
 
     bind() {
       // Keep keystrokes inside the overlay away from Netflix's player hotkeys (space, arrows, F, M…).
       for (const type of ['keydown', 'keyup', 'keypress']) this.host.addEventListener(type, (e) => e.stopPropagation());
+      // Likewise pointer events: players (Hulu) have document-level click handlers that refocus the player.
+      for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click', 'dblclick', 'touchstart', 'touchend', 'focusin', 'focusout']) this.host.addEventListener(type, (e) => e.stopPropagation());
 
       this.el.pill.addEventListener('click', () => this.setOpen(true));
       this.$('.close').addEventListener('click', () => this.setOpen(false));

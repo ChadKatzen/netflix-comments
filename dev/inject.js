@@ -135,6 +135,7 @@ window.NFC = window.NFC || {};
       title: () => firstText(['[data-uia="video-title"]', '.watch-video--title-text', '[data-uia="player-title"]']),
       video: () => document.querySelector('video'),
       clock: defaultClock, seek: defaultSeek,
+      mount: () => document.body,
     },
     {
       name: 'hulu',
@@ -150,6 +151,9 @@ window.NFC = window.NFC || {};
       // #content-video-player is the show; #ad-video-player / #intro-video-player / .VideoPreviewPlayer are not.
       video: () => document.getElementById('content-video-player') || document.querySelector('video.ContentPlayer__videoPlayer') || document.querySelector('video'),
       clock: huluClock, seek: huluSeek,
+      // Hulu's player keeps a focus trap: focus outside .ContentPlayer snaps back to a player button, so the
+      // overlay must live inside it (verified live 2026-10-18).
+      mount: () => document.querySelector('.ContentPlayer') || document.getElementById('web-player-app') || document.body,
     },
     {
       name: 'mock',
@@ -158,6 +162,7 @@ window.NFC = window.NFC || {};
       title: () => firstText(['[data-uia="video-title"]']),
       video: () => document.querySelector('video'),
       clock: defaultClock, seek: defaultSeek,
+      mount: () => document.body,
     },
   ];
   NFC.site = NFC.SITES.find((s) => s.test(location.hostname)) || null;
@@ -662,13 +667,15 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
     }
 
     mount() {
-      const parent = document.fullscreenElement || document.body;
+      const parent = document.fullscreenElement || (NFC.site && NFC.site.mount && NFC.site.mount()) || document.body;
       if (this.host.parentNode !== parent) parent.appendChild(this.host);
     }
 
     bind() {
       // Keep keystrokes inside the overlay away from Netflix's player hotkeys (space, arrows, F, M…).
       for (const type of ['keydown', 'keyup', 'keypress']) this.host.addEventListener(type, (e) => e.stopPropagation());
+      // Likewise pointer events: players (Hulu) have document-level click handlers that refocus the player.
+      for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click', 'dblclick', 'touchstart', 'touchend', 'focusin', 'focusout']) this.host.addEventListener(type, (e) => e.stopPropagation());
 
       this.el.pill.addEventListener('click', () => this.setOpen(true));
       this.$('.close').addEventListener('click', () => this.setOpen(false));
@@ -1016,6 +1023,7 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
       ui.setTitle(title, v);
     }
     if (!id) return;
+    ui.mount(); // SPA players build their container after we load; keep the overlay inside it
     if (v !== video) {
       if (video) { video.removeEventListener('timeupdate', onTime); video.removeEventListener('seeked', onTime); }
       video = v; ui.setVideo(v);

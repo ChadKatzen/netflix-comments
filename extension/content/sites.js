@@ -42,6 +42,7 @@ window.NFC = window.NFC || {};
       title: () => firstText(['[data-uia="video-title"]', '.watch-video--title-text', '[data-uia="player-title"]']),
       video: () => document.querySelector('video'),
       clock: defaultClock, seek: defaultSeek,
+      mount: () => document.body,
     },
     {
       name: 'hulu',
@@ -57,6 +58,9 @@ window.NFC = window.NFC || {};
       // #content-video-player is the show; #ad-video-player / #intro-video-player / .VideoPreviewPlayer are not.
       video: () => document.getElementById('content-video-player') || document.querySelector('video.ContentPlayer__videoPlayer') || document.querySelector('video'),
       clock: huluClock, seek: huluSeek,
+      // Hulu's player keeps a focus trap: focus outside .ContentPlayer snaps back to a player button, so the
+      // overlay must live inside it (verified live 2026-10-18).
+      mount: () => document.querySelector('.ContentPlayer') || document.getElementById('web-player-app') || document.body,
     },
     {
       name: 'mock',
@@ -65,6 +69,7 @@ window.NFC = window.NFC || {};
       title: () => firstText(['[data-uia="video-title"]']),
       video: () => document.querySelector('video'),
       clock: defaultClock, seek: defaultSeek,
+      mount: () => document.body,
     },
   ];
   NFC.site = NFC.SITES.find((s) => s.test(location.hostname)) || null;

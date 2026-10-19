@@ -23,6 +23,7 @@
       ui.setTitle(title, v);
     }
     if (!id) return;
+    ui.mount(); // SPA players build their container after we load; keep the overlay inside it
     if (v !== video) {
       if (video) { video.removeEventListener('timeupdate', onTime); video.removeEventListener('seeked', onTime); }
       video = v; ui.setVideo(v);
