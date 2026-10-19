@@ -20,6 +20,9 @@ window.NFC = window.NFC || {};
   NFC.hash = (s) => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); };
   NFC.avatarColor = (id) => `hsl(${NFC.hash(id) % 360} 55% 45%)`;
   NFC.initial = (name) => (String(name || '?').trim()[0] || '?').toUpperCase();
+  // Short tag derived from the hidden per-install id. Two people can pick the same display name, but their
+  // tags differ, and nobody can copy a tag without the id behind it.
+  NFC.tag = (id) => '#' + NFC.hash('tag:' + id).toString(36).slice(-4).padStart(4, '0');
 
   NFC.timeAgo = (ts) => {
     const d = Math.max(0, Date.now() - ts) / 1000;

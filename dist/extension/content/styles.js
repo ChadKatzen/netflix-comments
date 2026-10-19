@@ -64,6 +64,7 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--red); ou
 .meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
 .meta .who { color: #fff; font-weight: 600; }
 .meta .age { color: #777; }
+.tag { color: #8a8a8a; font-weight: 500; font-size: 11px; margin-left: 3px; letter-spacing: .02em; }
 .meta .you { background: var(--bg3); color: #fff; font-size: 10px; padding: 0 5px; border-radius: 4px; font-weight: 600; }
 .tpill { background: var(--bg3); color: #fff; font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; }
 .tpill:hover { background: var(--red); }

@@ -160,7 +160,7 @@
     }
     applySettings() {
       const s = store.settings;
-      this.$('.who-am-i').textContent = 'as ' + store.displayName();
+      this.$('.who-am-i').textContent = 'as ' + store.displayName() + ' ' + NFC.tag(store.user.userId);
       if (this.el.drawer.classList.contains('hide') === !!s.panelOpen) {
         this.el.drawer.classList.toggle('hide', !s.panelOpen);
         this.el.pill.classList.toggle('hide', !!s.panelOpen);
@@ -302,7 +302,7 @@
 <div class="${cls}" data-id="${esc(c.id)}">
   <div class="av" style="background:${avatarColor(c.authorId)}">${esc(initial(c.authorName))}</div>
   <div class="bd">
-    <div class="meta"><span class="who">${esc(c.authorName)}</span>${c.mine ? '<span class="you">you</span>' : ''}${isReply ? '' : `<button class="tpill" data-act="seek" data-t="${c.t}" title="Jump to ${fmtTime(c.t)}">${fmtTime(c.t)}</button>`}<span class="age">· ${timeAgo(c.createdAt)}${status}</span></div>
+    <div class="meta"><span class="who">${esc(c.authorName)}<span class="tag">${NFC.tag(c.authorId)}</span></span>${c.mine ? '<span class="you">you</span>' : ''}${isReply ? '' : `<button class="tpill" data-act="seek" data-t="${c.t}" title="Jump to ${fmtTime(c.t)}">${fmtTime(c.t)}</button>`}<span class="age">· ${timeAgo(c.createdAt)}${status}</span></div>
     <div class="txt">${esc(c.body)}</div>
     <div class="acts">
       <button class="like ${c.liked ? 'on' : ''}" data-act="like" ${canAct ? '' : 'disabled'}>${ICON.heart}<span>${compact(c.likeCount ?? 0)}</span></button>
@@ -389,7 +389,7 @@
     toast(c) {
       const el = document.createElement('div');
       el.className = 'toast'; el.dataset.id = c.id;
-      el.innerHTML = `<div class="av" style="background:${avatarColor(c.authorId)}">${esc(initial(c.authorName))}</div><div><div class="who"><b>${esc(c.authorName)}</b> · ${fmtTime(c.t)}${c.likeCount ? ` · ♥ ${compact(c.likeCount)}` : ''}</div><div class="txt">${esc(c.body)}</div></div>`;
+      el.innerHTML = `<div class="av" style="background:${avatarColor(c.authorId)}">${esc(initial(c.authorName))}</div><div><div class="who"><b>${esc(c.authorName)}</b><span class="tag">${NFC.tag(c.authorId)}</span> · ${fmtTime(c.t)}${c.likeCount ? ` · ♥ ${compact(c.likeCount)}` : ''}</div><div class="txt">${esc(c.body)}</div></div>`;
       this.el.toasts.appendChild(el);
       while (this.el.toasts.childElementCount > MAX_TOASTS) this.el.toasts.firstElementChild.remove();
       this.expireToast(el, TOAST_MS);

@@ -9,7 +9,8 @@ async function load() {
   for (const f of fields) $(f).value = settings[f] ?? '';
   for (const c of checks) $(c).checked = !!settings[c];
   const { user } = await chrome.storage.local.get('user');
-  $('uid').textContent = user?.userId ?? '(created on first Netflix visit)';
+  $('uid').textContent = user?.userId ?? '(created on first visit)';
+  $('utag').textContent = user?.userId ? '#' + (((s) => { let h = 0; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); })('tag:' + user.userId).toString(36).slice(-4).padStart(4, '0')) : '';
   test(true);
 }
 
