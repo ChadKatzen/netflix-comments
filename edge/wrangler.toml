@@ -4,6 +4,10 @@ name = "netflix-comments-api"
 main = "worker.js"
 compatibility_date = "2025-06-01"
 
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+
 [vars]
 SERVE_SNAPSHOTS = "true"   # serve /t/* reads from R2 through the Worker (simple). Set "false" + R2 custom domain for max scale.
 

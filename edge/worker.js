@@ -10,6 +10,7 @@
 import { handleApi, HttpError, CORS } from '../server/shared/routes.js';
 import { buildSnapshot, metaPath, bucketPath } from '../server/shared/snapshot.js';
 import { d1Store } from './db-d1.js';
+import PRIVACY_HTML from './privacy.html';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...CORS };
 const SNAPSHOT_CACHE = 'public, max-age=30, stale-while-revalidate=600';
@@ -18,6 +19,9 @@ export default {
   async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
     const url = new URL(request.url);
+    if (url.pathname === '/privacy' || url.pathname === '/privacy.html') {
+      return new Response(PRIVACY_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+    }
     if (!url.pathname.startsWith('/api/')) {
       // Optional read path: serve t/<id>/meta.json and t/<id>/b/<n>.json straight from R2 with cache headers.
       // Cheapest at scale is a public R2 custom domain instead (no Worker invocation per read), but this makes a
