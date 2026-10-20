@@ -44,6 +44,8 @@ Works on hulu.com and netflix.com watch pages. Not affiliated with Hulu or Netfl
 **Permission justifications**
 
 - `storage` — saves the user's display name, settings, anonymous id, and a cache of comments for recently watched episodes so the drawer works offline.
+- `scripting` — on install, injects the comment drawer into Hulu/Netflix tabs that are already open so the user does not have to refresh. Nothing else is injected; only the same packaged content scripts.
+- Host permission `*://*.hulu.com/*`, `*://*.netflix.com/*` — same purpose as the content script match (needed for the one-time injection above).
 - Host permission `https://*.workers.dev/*` — the extension's comment server (reads cached comment snapshots, posts comments/likes). Fetched from the background service worker; no other hosts are contacted.
 - Content script on `*://*.netflix.com/*` and `*://*.hulu.com/*` — required to draw the comment drawer over the player and read the player's current playback time.
 

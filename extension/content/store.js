@@ -12,7 +12,6 @@
     writeBase: 'https://netflix-comments-api.katzen-chad.workers.dev',
     spoilerGuard: true,
     showToasts: true,
-    pauseOnCompose: true,
     panelOpen: true,
   };
   const META_TTL = 45_000, BUCKET_TTL = 60_000, MINE_TTL = 15 * 60_000, CACHE_TITLES = 25;

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Community Swim",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Time-stamped comments on Hulu and Netflix: see what people said at this exact moment, with top comments and a spoiler guard.",
   "icons": {
     "16": "icons/16.png",
@@ -9,7 +9,7 @@
     "128": "icons/128.png"
   },
   "action": {
-    "default_title": "Netflix Comments",
+    "default_title": "Community Swim",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/16.png",
@@ -21,12 +21,15 @@
     "service_worker": "background.js"
   },
   "permissions": [
-    "storage"
+    "storage",
+    "scripting"
   ],
   "host_permissions": [
     "http://localhost/*",
     "http://127.0.0.1/*",
-    "https://*.workers.dev/*"
+    "https://*.workers.dev/*",
+    "*://*.netflix.com/*",
+    "*://*.hulu.com/*"
   ],
   "optional_host_permissions": [
     "https://*/*",

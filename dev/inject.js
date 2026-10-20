@@ -33,7 +33,7 @@
     const top = comments.filter((c) => c.parentId == null).sort((a, b) => b.likeCount - a.likeCount);
     mem.local['title:' + vid] = { meta: { videoId: vid, name: '', duration, count: top.length, totalWithReplies: comments.length, bucketSeconds: B, bucketCounts, histSeconds: HS, hist, top, newest: [...top].sort((a, b) => b.createdAt - a.createdAt), generatedAt: Date.now() - 60e3 }, buckets, mine: [], likes: {}, deleted: {}, savedAt: Date.now() };
   }
-  mem.sync.settings = { readBase: "http://localhost:3131", writeBase: "http://localhost:3131", displayName: 'chad', spoilerGuard: true, showToasts: true, pauseOnCompose: true, panelOpen: true };
+  mem.sync.settings = { readBase: "http://localhost:3131", writeBase: "http://localhost:3131", displayName: 'chad', spoilerGuard: true, showToasts: true, panelOpen: true };
 })();
 
 // Shared helpers for the content scripts. Everything lives under window.NFC to avoid globals.
@@ -58,6 +58,9 @@ window.NFC = window.NFC || {};
   NFC.hash = (s) => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) | 0; return Math.abs(h); };
   NFC.avatarColor = (id) => `hsl(${NFC.hash(id) % 360} 55% 45%)`;
   NFC.initial = (name) => (String(name || '?').trim()[0] || '?').toUpperCase();
+  // Short tag derived from the hidden per-install id. Two people can pick the same display name, but their
+  // tags differ, and nobody can copy a tag without the id behind it.
+  NFC.tag = (id) => '#' + NFC.hash('tag:' + id).toString(36).slice(-4).padStart(4, '0');
 
   NFC.timeAgo = (ts) => {
     const d = Math.max(0, Date.now() - ts) / 1000;
@@ -257,6 +260,7 @@ button:focus-visible, textarea:focus-visible { outline: 2px solid var(--red); ou
 .meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
 .meta .who { color: #fff; font-weight: 600; }
 .meta .age { color: #777; }
+.tag { color: #8a8a8a; font-weight: 500; font-size: 11px; margin-left: 3px; letter-spacing: .02em; }
 .meta .you { background: var(--bg3); color: #fff; font-size: 10px; padding: 0 5px; border-radius: 4px; font-weight: 600; }
 .tpill { background: var(--bg3); color: #fff; font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; }
 .tpill:hover { background: var(--red); }
@@ -313,7 +317,6 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
     writeBase: 'https://netflix-comments-api.katzen-chad.workers.dev',
     spoilerGuard: true,
     showToasts: true,
-    pauseOnCompose: true,
     panelOpen: true,
   };
   const META_TTL = 45_000, BUCKET_TTL = 60_000, MINE_TTL = 15 * 60_000, CACHE_TITLES = 25;
@@ -629,7 +632,7 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
 
   const ICON = {
     chat: '<svg viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>',
-    close: '<svg viewBox="0 0 24 24"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg>',
+    close: '<svg viewBox="0 0 24 24"><path d="M4 11h16v2H4z"/></svg>',
     eye: '<svg viewBox="0 0 24 24"><path d="M12 5c5 0 9 4 10.5 7-1.5 3-5.5 7-10.5 7S3 15 1.5 12C3 9 7 5 12 5zm0 3.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z"/></svg>',
     eyeOff: '<svg viewBox="0 0 24 24"><path d="M2.3 3.7 3.7 2.3l18 18-1.4 1.4-3.3-3.3C15.5 19.3 13.8 19.7 12 19.7 7 19.7 3 15.7 1.5 12.7c.8-1.6 2.2-3.4 4-4.9zM12 5.3c5 0 9 4 10.5 7.4-.6 1.2-1.5 2.5-2.7 3.7l-2.6-2.6a3.8 3.8 0 0 0-4.5-4.5L9.9 6.5c.7-.8 1.4-1.2 2.1-1.2z"/></svg>',
     heart: '<svg viewBox="0 0 24 24"><path d="M12 20.3 4.3 12.6a4.6 4.6 0 0 1 6.5-6.5L12 7.3l1.2-1.2a4.6 4.6 0 0 1 6.5 6.5z"/></svg>',
@@ -679,7 +682,7 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
   <div class="hdr">
     <div class="ttl"><div class="name">Community Swim</div><div class="sub">loading…</div></div>
     <button class="ib spoiler on" title="Spoiler guard: hiding comments ahead of you">${ICON.eye}</button>
-    <button class="ib close" title="Hide (Shift+C)">${ICON.close}</button>
+    <button class="ib close" title="Minimize (Shift+C)">${ICON.close}</button>
   </div>
   <div class="strip" title="Comment density. Click to seek."><div class="hist"></div><div class="play"></div><div class="tt">0:00</div></div>
   <div class="times"><span class="t-now">0:00</span><span class="t-end">0:00</span></div>
@@ -723,6 +726,7 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
         this.renderList(true);
         this.el.list.scrollTop = 0;
       });
+      if (typeof ResizeObserver !== 'undefined') new ResizeObserver(() => this.renderStrip()).observe(this.el.strip);
       this.el.strip.addEventListener('mousemove', (e) => {
         const r = this.el.strip.getBoundingClientRect();
         const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
@@ -782,7 +786,7 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
     }
     applySettings() {
       const s = store.settings;
-      this.$('.who-am-i').textContent = 'as ' + store.displayName();
+      this.$('.who-am-i').textContent = 'as ' + store.displayName() + ' ' + NFC.tag(store.user.userId);
       if (this.el.drawer.classList.contains('hide') === !!s.panelOpen) {
         this.el.drawer.classList.toggle('hide', !s.panelOpen);
         this.el.pill.classList.toggle('hide', !!s.panelOpen);
@@ -852,22 +856,24 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
 
     renderStrip() {
       const hist = this.title?.meta?.hist ?? [];
-      const max = Math.max(1, ...hist);
-      if (this.el.hist.childElementCount !== hist.length) {
-        this.el.hist.innerHTML = hist.map(() => '<i></i>').join('');
-      }
+      // One bar per 10-s bin overflows the strip on long titles (a 42-min episode is 253 bins), which
+      // stretches the scale. Fold bins into however many 3-px bars fit the strip width instead.
+      const width = this.el.strip.clientWidth || 320;
+      const n = hist.length ? Math.min(hist.length, Math.max(24, Math.floor(width / 3))) : 0;
+      const bins = new Array(n).fill(0);
+      for (let i = 0; i < hist.length; i++) bins[Math.min(n - 1, Math.floor((i / hist.length) * n))] += hist[i];
+      const max = Math.max(1, ...bins);
+      if (this.el.hist.childElementCount !== n) this.el.hist.innerHTML = bins.map(() => '<i></i>').join('');
       const bars = this.el.hist.children;
-      for (let i = 0; i < hist.length; i++) {
-        const h = hist[i] ? 6 + Math.round((hist[i] / max) * 36) : 2;
-        bars[i].style.height = h + 'px';
-        bars[i].classList.toggle('hot', hist[i] >= max * 0.8 && hist[i] > 2);
+      for (let i = 0; i < n; i++) {
+        bars[i].style.height = (bins[i] ? 6 + Math.round((bins[i] / max) * 36) : 2) + 'px';
+        bars[i].classList.toggle('hot', bins[i] >= max * 0.8 && bins[i] > 2);
       }
       this.renderStripProgress();
     }
     renderStripProgress() {
-      const hs = this.title?.meta?.histSeconds ?? 10;
-      const idx = Math.floor(this.now / hs);
       const bars = this.el.hist.children;
+      const idx = this.duration ? Math.floor((this.now / this.duration) * bars.length) : -1;
       for (let i = 0; i < bars.length; i++) bars[i].classList.toggle('past', i <= idx);
     }
 
@@ -924,7 +930,7 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
 <div class="${cls}" data-id="${esc(c.id)}">
   <div class="av" style="background:${avatarColor(c.authorId)}">${esc(initial(c.authorName))}</div>
   <div class="bd">
-    <div class="meta"><span class="who">${esc(c.authorName)}</span>${c.mine ? '<span class="you">you</span>' : ''}${isReply ? '' : `<button class="tpill" data-act="seek" data-t="${c.t}" title="Jump to ${fmtTime(c.t)}">${fmtTime(c.t)}</button>`}<span class="age">· ${timeAgo(c.createdAt)}${status}</span></div>
+    <div class="meta"><span class="who">${esc(c.authorName)}<span class="tag">${NFC.tag(c.authorId)}</span></span>${c.mine ? '<span class="you">you</span>' : ''}${isReply ? '' : `<button class="tpill" data-act="seek" data-t="${c.t}" title="Jump to ${fmtTime(c.t)}">${fmtTime(c.t)}</button>`}<span class="age">· ${timeAgo(c.createdAt)}${status}</span></div>
     <div class="txt">${esc(c.body)}</div>
     <div class="acts">
       <button class="like ${c.liked ? 'on' : ''}" data-act="like" ${canAct ? '' : 'disabled'}>${ICON.heart}<span>${compact(c.likeCount ?? 0)}</span></button>
@@ -962,7 +968,7 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
     // ---------- composer ----------
     beginCompose() {
       if (this.composeT == null) { this.composeT = this.replyTo ? this.replyTo.t : this.now; this.el.at.textContent = fmtTime(this.composeT); }
-      if (store.settings.pauseOnCompose && this.video && !this.video.paused) {
+      if (this.video && !this.video.paused) {
         try { NFC.site.pause(this.video); this.pausedByUs = true; } catch { /* ignore */ }
       }
     }
@@ -1011,7 +1017,7 @@ kbd { background: var(--bg3); border-radius: 4px; padding: 0 5px; font: 11px ui-
     toast(c) {
       const el = document.createElement('div');
       el.className = 'toast'; el.dataset.id = c.id;
-      el.innerHTML = `<div class="av" style="background:${avatarColor(c.authorId)}">${esc(initial(c.authorName))}</div><div><div class="who"><b>${esc(c.authorName)}</b> · ${fmtTime(c.t)}${c.likeCount ? ` · ♥ ${compact(c.likeCount)}` : ''}</div><div class="txt">${esc(c.body)}</div></div>`;
+      el.innerHTML = `<div class="av" style="background:${avatarColor(c.authorId)}">${esc(initial(c.authorName))}</div><div><div class="who"><b>${esc(c.authorName)}</b><span class="tag">${NFC.tag(c.authorId)}</span> · ${fmtTime(c.t)}${c.likeCount ? ` · ♥ ${compact(c.likeCount)}` : ''}</div><div class="txt">${esc(c.body)}</div></div>`;
       this.el.toasts.appendChild(el);
       while (this.el.toasts.childElementCount > MAX_TOASTS) this.el.toasts.firstElementChild.remove();
       this.expireToast(el, TOAST_MS);

@@ -41,7 +41,7 @@ const shim = `
     const top = comments.filter((c) => c.parentId == null).sort((a, b) => b.likeCount - a.likeCount);
     mem.local['title:' + vid] = { meta: { videoId: vid, name: '', duration, count: top.length, totalWithReplies: comments.length, bucketSeconds: B, bucketCounts, histSeconds: HS, hist, top, newest: [...top].sort((a, b) => b.createdAt - a.createdAt), generatedAt: Date.now() - 60e3 }, buckets, mine: [], likes: {}, deleted: {}, savedAt: Date.now() };
   }
-  mem.sync.settings = { readBase: ${JSON.stringify(API)}, writeBase: ${JSON.stringify(API)}, displayName: 'chad', spoilerGuard: true, showToasts: true, pauseOnCompose: true, panelOpen: true };
+  mem.sync.settings = { readBase: ${JSON.stringify(API)}, writeBase: ${JSON.stringify(API)}, displayName: 'chad', spoilerGuard: true, showToasts: true, panelOpen: true };
 })();
 `;
 const files = ['util.js', 'sites.js', 'styles.js', 'store.js', 'ui.js', 'main.js'].map((f) => readFileSync(join(root, 'extension', 'content', f), 'utf8'));

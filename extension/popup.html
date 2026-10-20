@@ -19,33 +19,38 @@
   .status { color: #aaa; font-size: 12px; margin-top: 10px; min-height: 16px; }
   .status.err { color: #ff6b6b; }
   details { margin-top: 12px; color: #999; font-size: 12px; }
+  details p { margin: 6px 0; }
+  .hint { margin: 0 0 4px; color: #aaa; font-size: 12px; }
   summary { cursor: pointer; }
   code { font: 11px ui-monospace, Menlo, monospace; background: #222; padding: 1px 4px; border-radius: 4px; }
 </style>
 </head>
 <body>
   <h1><span class="dot" id="dot"></span>Community Swim</h1>
+  <p class="hint">Open an episode on Hulu or Netflix and the drawer appears on the right. <code>Shift+C</code> opens the composer. If you installed while an episode was open, refresh that tab once.</p>
 
   <label for="displayName">Display name</label>
   <input type="text" id="displayName" maxlength="40" placeholder="viewer-1234">
 
-  <label for="readBase">Comments read URL (snapshot CDN)</label>
-  <input type="url" id="readBase" placeholder="https://netflix-comments-api.katzen-chad.workers.dev">
-  <label for="writeBase">Comments write URL (API)</label>
-  <input type="url" id="writeBase" placeholder="https://netflix-comments-api.katzen-chad.workers.dev">
-
   <div class="chk"><input type="checkbox" id="spoilerGuard"><label for="spoilerGuard" style="margin:0;color:#ddd">Spoiler guard: hide comments ahead of where I am</label></div>
   <div class="chk"><input type="checkbox" id="showToasts"><label for="showToasts" style="margin:0;color:#ddd">Pop up comments as I pass them</label></div>
-  <div class="chk"><input type="checkbox" id="pauseOnCompose"><label for="pauseOnCompose" style="margin:0;color:#ddd">Pause the video while I type</label></div>
 
-  <div class="row"><button id="save">Save</button><button class="sec" id="test">Test server</button></div>
+  <div class="row"><button id="save">Save</button></div>
   <div class="status" id="status"></div>
 
   <details>
     <summary>Identity</summary>
     <p>Your anonymous id: <code id="uid"></code><br>Your tag (shown after your name so nobody can pose as you): <code id="utag"></code><br>Comments and likes are tied to the id. Resetting makes a fresh identity (you lose the ability to delete old comments).</p>
     <button class="sec" id="reset">Reset identity</button>
-    <p>Hotkey on Netflix / Hulu: <code>Shift+C</code> toggles the drawer / focuses the composer.</p>
+  </details>
+  <details>
+    <summary>Advanced (self-hosting)</summary>
+    <p>Only change these if you run your own comment server. Leave blank to use the default.</p>
+    <label for="readBase">Comments read URL (snapshot CDN)</label>
+    <input type="url" id="readBase" placeholder="https://netflix-comments-api.katzen-chad.workers.dev">
+    <label for="writeBase">Comments write URL (API)</label>
+    <input type="url" id="writeBase" placeholder="https://netflix-comments-api.katzen-chad.workers.dev">
+    <div class="row"><button class="sec" id="test">Test server</button></div>
   </details>
   <script src="popup.js"></script>
 </body>

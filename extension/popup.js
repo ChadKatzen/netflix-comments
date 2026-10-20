@@ -1,12 +1,13 @@
-const DEFAULTS = { displayName: '', readBase: 'https://netflix-comments-api.katzen-chad.workers.dev', writeBase: 'https://netflix-comments-api.katzen-chad.workers.dev', spoilerGuard: true, showToasts: true, pauseOnCompose: true, panelOpen: true };
+const DEFAULTS = { displayName: '', readBase: 'https://netflix-comments-api.katzen-chad.workers.dev', writeBase: 'https://netflix-comments-api.katzen-chad.workers.dev', spoilerGuard: true, showToasts: true, panelOpen: true };
 const $ = (id) => document.getElementById(id);
 const fields = ['displayName', 'readBase', 'writeBase'];
-const checks = ['spoilerGuard', 'showToasts', 'pauseOnCompose'];
+const checks = ['spoilerGuard', 'showToasts'];
 let settings = { ...DEFAULTS };
 
 async function load() {
   settings = { ...DEFAULTS, ...(await chrome.storage.sync.get('settings')).settings };
   for (const f of fields) $(f).value = settings[f] ?? '';
+  for (const f of ['readBase', 'writeBase']) if ($(f).value === DEFAULTS[f]) $(f).value = '';
   for (const c of checks) $(c).checked = !!settings[c];
   const { user } = await chrome.storage.local.get('user');
   $('uid').textContent = user?.userId ?? '(created on first visit)';
@@ -18,7 +19,7 @@ function originPattern(url) { const u = new URL(url); return `${u.protocol}//${u
 
 async function save() {
   const next = { ...settings };
-  for (const f of fields) next[f] = $(f).value.trim();
+  for (const f of fields) next[f] = $(f).value.trim() || DEFAULTS[f];
   for (const c of checks) next[c] = $(c).checked;
   if (!next.displayName) next.displayName = settings.displayName || 'viewer';
   const origins = [];
@@ -57,7 +58,7 @@ function status(msg, err = false) { $('status').textContent = msg; $('status').c
 $('save').addEventListener('click', save);
 $('test').addEventListener('click', () => test(false));
 $('reset').addEventListener('click', async () => {
-  if ($('reset').dataset.c) { await chrome.storage.local.remove('user'); $('uid').textContent = '(created on next Netflix visit)'; $('reset').textContent = 'Reset identity'; delete $('reset').dataset.c; return; }
+  if ($('reset').dataset.c) { await chrome.storage.local.remove('user'); $('uid').textContent = '(created on next visit)'; $('reset').textContent = 'Reset identity'; delete $('reset').dataset.c; return; }
   $('reset').dataset.c = '1'; $('reset').textContent = 'Really reset?'; setTimeout(() => { delete $('reset').dataset.c; $('reset').textContent = 'Reset identity'; }, 3000);
 });
 load();

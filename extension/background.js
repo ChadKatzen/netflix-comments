@@ -44,3 +44,20 @@ function originPattern(url) {
   const u = new URL(url);
   return `${u.protocol}//${u.hostname}/*`;
 }
+
+// On install/update, inject the content scripts into Hulu/Netflix tabs that are already open, so the user
+// doesn't have to refresh. Tabs that already run the scripts (window.NFC set) are skipped.
+chrome.runtime.onInstalled.addListener(async () => {
+  const cs = chrome.runtime.getManifest().content_scripts?.[0];
+  if (!cs || !chrome.scripting) return;
+  let tabs = [];
+  try { tabs = await chrome.tabs.query({ url: cs.matches }); } catch { return; }
+  for (const tab of tabs) {
+    if (!tab.id) continue;
+    try {
+      const [{ result: loaded } = {}] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: () => !!window.NFC });
+      if (loaded) continue;
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: cs.js });
+    } catch { /* tab not scriptable (chrome://, discarded, no permission) */ }
+  }
+});

@@ -30,14 +30,14 @@ cd server && npm start          # http://localhost:3131  (Node >= 22.5, zero dep
    per episode (`hulu-<uuid>` / `nf-<id>`).
 
 The extension defaults to the deployed server for Hulu/Netflix and to `http://localhost:3131` on the mock player.
-Change either URL in the toolbar popup.
+Change either URL under *Advanced* in the toolbar popup.
 
 ## Using it
 
 | Action | How |
 |---|---|
 | Show / hide the drawer, focus the composer | `Shift+C`, or the pill on the right edge |
-| Comment on this moment | Type in the composer. The red time chip freezes at the moment you started typing. `Enter` posts, `Esc` cancels. The video pauses while you type and resumes when you post (toggle in popup). |
+| Comment on this moment | Type in the composer. The red time chip freezes at the moment you started typing. `Enter` posts, `Esc` cancels. The video pauses while you type and resumes when you post. |
 | Read what people said here | **Live** tab: comments in time order, the ones from the last ~25 s highlighted as *happening now*, auto-scrolls with playback. |
 | Best comments | **Top** tab (by likes, then replies). **New** tab is newest first. |
 | Spoiler guard | Comments ahead of the playhead are hidden by default. Eye icon in the header or "Show anyway" reveals them. |
